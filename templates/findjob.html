@@ -1,0 +1,198 @@
+{% extends 'layout.html' %} {% block body %}
+<div class="container col-12 col-md-8 m-0">
+	<!-- The Modal -->
+	<div class="modal" id="myModal">
+		<div class="modal-dialog modal-dialog-scrollable">
+			<div class="modal-content">
+				<!-- Modal Header -->
+				<div class="modal-header">
+					<h3 class="modal-title mx-auto" id="">Application</h3>
+					<!-- <button type="button" class="close" data-dismiss="modal">
+						×
+					</button> -->
+				</div>
+
+				<!-- Modal body -->
+				<div
+					class="modal-body d-flex flex-column justify-content-between"
+				>
+					<div class="d-flex m-2 row justify-content-between">
+						<h4 class="d-block text-weight-light">
+							Company:
+							<span
+								class="h4 text-danger m-1"
+								id="company_name"
+							></span>
+						</h4>
+						<h4 class="d-block text-weight-light">
+							Job Title:
+							<span
+								class="h4 text-primary m-1"
+								id="job_title"
+							></span>
+						</h4>
+					</div>
+					<div class="ml-4 mb-2">
+						<p
+							class=""
+							style="font: 1.2em light"
+							id="post_description"
+						></p>
+					</div>
+					<form action="POST">
+						<div class="form-group">
+							<label for="skills" class="h5"
+								>List Your Skills for the Job Profile</label
+							>
+							<textarea
+								placeholder="Your Skills"
+								class="form-control"
+								rows="7"
+								name="skills"
+								id="skills"
+								required
+							></textarea>
+						</div>
+					</form>
+				</div>
+
+				<!-- Modal footer -->
+				<div class="modal-footer d-flex justify-content-between">
+					<button
+						type="button"
+						class="btn btn-success"
+						data-dismiss="modal"
+						onclick="sendData()"
+					>
+						Send Application
+					</button>
+					<button
+						type="button"
+						class="btn btn-danger"
+						data-dismiss="modal"
+					>
+						Close
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<button
+		type="button"
+		class="btn btn-primary d-none"
+		data-toggle="modal"
+		data-target="#myModal"
+		id="modal_buton"
+	>
+		Open modal
+	</button>
+	{% for post in posts%}
+
+	<div class="p-4 m-1 mb-3 col-12 d-flex flex-column border">
+		<div class="d-flex text_medium h4 justify-content-between m-0 flex-row">
+			<div class="company_name text-danger">
+				<a class="text-danger" href="/user/{{post['company']['username']}}"><h2>{{ post['company_name'] }}</h2></a>
+				<p class="text-primary">{{ post['company']['company_type'] }}</p>
+			</div>
+		</div>
+		<p class="text-muted font-weight-light m-1 text-secondary">
+			{{ post['post_time'] }}
+		</p>
+		<div class="post_details m-0">
+			<hr />
+			<div class="job_title p-0 text-dark text_medium h5">
+				Job Title:
+				<strong class="text-info">{{ post['job_type'] }}</strong>
+			</div>
+			<div class="post_content p-2 pl-4 text-left">
+				{{ post['job_description'] }}
+			</div>
+			<hr />
+			<div
+				class="d-flex justify-content-between align-items-end flex-column"
+			>
+				<a
+					href="mailto?:{{ post['company_email' ]}}"
+					class="company_email m-2"
+					>Email</a
+				>
+			</div>
+		</div>
+		{% if 'user' in session %}
+		<button class="btn btn-outline-success" onclick='getData( "{{post}}" )'>
+			Apply
+		</button>
+		{% else %}
+		<a class="btn btn-outline-info" href="{{ url_for('login') }}"
+			>Login to Apply</a
+		>
+		{% endif %}
+	</div>
+
+	{% endfor %}
+</div>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script
+  src="https://code.jquery.com/jquery-3.4.1.js"
+  integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+  crossorigin="anonymous"
+></script>
+
+<script type="text/javascript">
+	const postDescription = document.getElementById('post_description');
+	const companyName = document.getElementById('company_name');
+	const jobTitle = document.getElementById('job_title');
+
+	var currentPOST
+
+	function getData(post) {
+		console.log(post)
+		console.log(post.replace(/'/g, '"'))
+		post = JSON.parse(post.replace(/'/g, '"'));
+		currentPOST = post
+		document.getElementById('modal_buton').click();
+		console.log(post);
+		postDescription.innerHTML = `${post['job_description']}`;
+		companyName.innerHTML = `${post['company_name']}`;
+		jobTitle.innerHTML = `${post['job_type']}`;
+	}
+	
+	function sendData(){
+		let skills = document.getElementById('skills').value;
+		currentPOST['skills'] = skills
+		currentPOST['time'] = (new Date()).toJSON()
+
+		console.log(currentPOST)
+		// axios.post('/applyjob', currentPOST)
+		//   .then(function (response) {
+		//     console.log(response);
+		//   })
+		//   .catch(function (error) {
+		//     console.log(error);
+		//   });
+
+		
+
+		$.ajax({
+			type: 'POST',
+			url : '{{ url_for("applyjob") }}',
+			data : JSON.stringify({
+				'application' : currentPOST
+			}),
+			success: function(response){
+				console.log(response)
+				if(response == 'success'){
+					alert("Application Submitted")
+				}
+			},
+			error: function(error){
+				console.log(error)
+			}
+		});
+	}
+
+</script>
+
+
+{% endblock %}
